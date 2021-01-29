@@ -177,7 +177,6 @@ namespace LSSDEdlioFileArchiver.Scraper
             {
                 writer.WriteLine(url);
             }  
-
         }
 
         static void RecordDownloadable(string filename, string url) 

@@ -12,7 +12,7 @@ namespace LSSDEdlioFileArchiver.Downloader
     class Program
     {
         static string _downloadDirectory = "download";
-        static string _outputFile_FileNames = "scraper-filenames.txt";
+        static readonly string _outputFile_Filenames = $"downloader-filenames-{DateTime.Now.ToString("yyyy-MM-dd-HHmm")}.txt";
 
         static async Task<bool> downloadFile(string url)
         {
@@ -27,10 +27,6 @@ namespace LSSDEdlioFileArchiver.Downloader
             string filepath = uri.PathAndQuery.Remove(uri.PathAndQuery.Length - filename.Length, filename.Length);
             string downloaded_path = $"{_downloadDirectory}{filepath}";
             string downloaded_path_with_filename = Path.Combine(downloaded_path, filename);
-
-            Console.WriteLine("Download directory: " + _downloadDirectory);
-            Console.WriteLine("Downloaded path: " + downloaded_path);
-            Console.WriteLine("Downloaded path with filename: " + downloaded_path_with_filename);
             
             if (!Directory.Exists(downloaded_path))
             {
@@ -49,16 +45,18 @@ namespace LSSDEdlioFileArchiver.Downloader
                 using (FileStream newFile = File.Create(downloaded_path_with_filename)) 
                 {
                     await response.Content.CopyToAsync(newFile);
+                    Console.WriteLine($"{url} => {downloaded_path_with_filename}");
                 }
 
                 IEnumerable<string> headerContentDispositions = new List<string>();
                 if (response.Content.Headers.TryGetValues("content-disposition", out headerContentDispositions))
                 {
-                    // TODO: Save the filenames in a file here                    
-
                     foreach(string cd in headerContentDispositions) 
                     {
-                        Console.WriteLine(" Found filename: " + cd);
+                        using(StreamWriter writer = File.AppendText(_outputFile_Filenames))
+                        {
+                            writer.WriteLine($"{url}\t{Path.Combine(filepath,filename)}\t{cd}");
+                        }  
                     }
                 } 
             }
@@ -71,18 +69,39 @@ namespace LSSDEdlioFileArchiver.Downloader
 
         static async Task Main(string[] args)
         {
-            List<string> _discoveredFiles = new List<string>();
-            
-            /** ******************* DEBUG ***************** */
-            _discoveredFiles.Add("https://22.files.edl.io/48ee/08/15/19/175547-71343254-78f6-45da-9021-4cb8f49d0e9e.pdf");
-            _discoveredFiles.Add("https://22.files.edl.io/aa3d/08/15/19/175547-aa1a2464-41b5-4c79-bc43-59462da07403.pdf");
+
+            string url_list_file = "scraper-downloadables.txt";
+
+            // Get command line arguments
+            if (args.Length > 0) 
+            {
+                // Until we find a better way, just accept the filename for a text file of urls
+                url_list_file = args[0];
+            }
+
+            // Try to open the file
+            Console.WriteLine($"Opening url file \"{url_list_file}\"...");
+
+            List<string> urls_to_download = new List<string>();
+            foreach(string line in File.ReadAllLines(url_list_file))
+            {
+                if (!string.IsNullOrEmpty(line)) 
+                {
+                    if (!urls_to_download.Contains(line)) 
+                    {
+                        urls_to_download.Add(line);
+                    }
+                }
+            }        
+
+            Console.WriteLine($"Found {urls_to_download.Count} urls to download.");
                 
             // Now, download all of those files         
-            if (_discoveredFiles.Count > 0)  
+            if (urls_to_download.Count > 0)  
             {
                 Console.WriteLine("Downloading all found files...");   
 
-                foreach(string url in _discoveredFiles)
+                foreach(string url in urls_to_download)
                 {
                     if (!(await downloadFile(url)))
                     {
