@@ -1,6 +1,7 @@
 # Standard CSharp .hgignore / .gitignore
 
 download/
+*.txt
 
 # Visual Studio 2015 addition
 .vs/
