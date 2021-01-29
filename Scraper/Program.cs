@@ -100,12 +100,17 @@ namespace LSSDEdlioFileArchiver.Scraper
                 }
 
                 // Ignore urls with blacklisted phrases
+                bool foundBlacklistedPhrase = false;
                 foreach(string blphrase in blacklisted_phrases) 
                 {
                     if (massaged_url.Contains(blphrase, StringComparison.InvariantCultureIgnoreCase)) 
                     {
-                        continue;
+                        foundBlacklistedPhrase = true;
                     }
+                }
+                if (foundBlacklistedPhrase) 
+                {
+                    continue;
                 }
 
                 // Convert relative URLs into absolute urls
