@@ -82,7 +82,7 @@ namespace LSSDEdlioFileArchiver.Scraper
                     continue;
                 }
 
-                // Ignore mailto
+                // Ignore javascript
                 if (massaged_url.StartsWith("javascript:", StringComparison.InvariantCultureIgnoreCase))
                 {
                     continue;
