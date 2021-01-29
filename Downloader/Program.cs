@@ -101,8 +101,11 @@ namespace LSSDEdlioFileArchiver.Downloader
             {
                 Console.WriteLine("Downloading all found files...");   
 
+                int downloadCount = 0;
                 foreach(string url in urls_to_download)
                 {
+                    downloadCount++;
+                    Console.Write($"{downloadCount}/{urls_to_download.Count} ");
                     if (!(await downloadFile(url)))
                     {
                         Console.WriteLine($"Error downloading file {url}");
